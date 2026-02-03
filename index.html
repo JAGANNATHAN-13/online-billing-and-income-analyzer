@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="Tiffin Shop Billing PWA - Offline billing application for roadside tiffin shops">
+    <meta name="theme-color" content="#0d6efd">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <title>Mobile Billing</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Favicon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥘</text></svg>">
+    <link rel="apple-touch-icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥘</text></svg>">
+
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+
+<body>
+    <!-- App Container -->
+    <div id="app" class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1 id="shopName" class="shop-name">online billing</h1>
+                <p id="shopAddress" class="shop-address">Chennai, Tamil Nadu</p>
+                <div class="header-controls">
+                    <button id="themeToggle" class="icon-btn" aria-label="Toggle theme">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                    <button id="offlineIndicator" class="offline-indicator" aria-label="Offline indicator">
+                        <span class="offline-dot"></span>
+                        <span class="offline-text">Online</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Navigation -->
+        <nav class="main-nav" role="navigation" aria-label="Main navigation">
+            <div class="nav-container">
+                <button class="nav-btn active" data-view="billing" aria-label="Billing section" aria-current="page">
+                    <span class="nav-icon">💵</span>
+                    <span class="nav-text">Billing</span>
+                </button>
+                <button class="nav-btn" data-view="history" aria-label="History & Analytics">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">History</span>
+                </button>
+                <button class="nav-btn" data-view="settings" aria-label="Settings">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-text">Settings</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Billing Section (Default View) -->
+            <section id="billingView" class="view-section active">
+                <div class="billing-container">
+                    <!-- Food Items Grid -->
+                    <div class="food-grid-section">
+                        <h2 class="section-title">Menu Items</h2>
+                        <div class="food-grid" id="foodGrid">
+                            <!-- Food items will be dynamically loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Cart Section -->
+                    <div class="cart-section">
+                        <div class="cart-header">
+                            <h2 class="section-title">
+                                Current Bill
+                                <span id="itemCount" class="item-count">(0 items)</span>
+                            </h2>
+                            <button id="clearCartBtn" class="text-btn" disabled>Clear All</button>
+                        </div>
+
+                        <div class="cart-items" id="cartItems">
+                            <!-- Cart items will be dynamically loaded here -->
+                            <div class="empty-cart">
+                                <p>Your cart is empty</p>
+                                <p class="empty-cart-hint">Tap on menu items to add them</p>
+                            </div>
+                        </div>
+
+                        <!-- Cart Summary -->
+                        <div class="cart-summary">
+                            <div class="summary-row">
+                                <span>Subtotal:</span>
+                                <span id="subtotal">₹0.00</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Tax (<span id="taxPercentage">0</span>%):</span>
+                                <span id="taxAmount">₹0.00</span>
+                            </div>
+                            <div class="summary-row total-row">
+                                <span>Total:</span>
+                                <span id="totalAmount">₹0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="action-buttons">
+                            <button id="generateBillBtn" class="btn btn-primary" disabled>
+                                Generate Bill
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Payment Section (Hidden until bill generation) -->
+            <section id="paymentView" class="view-section">
+                <div class="payment-container">
+                    <div class="payment-header">
+                        <h2 class="section-title">Complete Payment</h2>
+                        <p class="bill-id" id="currentBillId">BILL-YYYYMMDD-001</p>
+                    </div>
+
+                    <!-- Bill Summary -->
+                    <div class="bill-summary-card">
+                        <div class="bill-summary-header">
+                            <h3>Bill Summary</h3>
+                            <button id="editBillBtn" class="text-btn">Edit</button>
+                        </div>
+                        <div id="billSummaryContent">
+                            <!-- Bill summary will be dynamically loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Payment Methods -->
+                    <div class="payment-methods">
+                        <!-- UPI Payment -->
+                        <div class="payment-method-card active" data-method="upi">
+                            <div class="method-header">
+                                <span class="method-icon">📱</span>
+                                <h3>UPI Payment</h3>
+                            </div>
+                            <div class="method-content">
+                                <div class="form-group">
+                                    <label for="upiId">UPI ID:</label>
+                                    <div class="input-group">
+                                        <input type="text" id="upiId" class="form-input" placeholder="yourname@upi"
+                                            value="shop@upi">
+                                        <button id="updateUpiBtn" class="btn btn-outline">Update</button>
+                                    </div>
+                                </div>
+                                <div class="qr-container">
+                                    <div id="upiQrCode" class="qr-code-placeholder">
+                                        <!-- QR Code will be generated here -->
+                                        <div class="qr-loading">Generating QR Code...</div>
+                                    </div>
+                                    <p class="qr-hint">Scan to pay via UPI</p>
+                                </div>
+                                <button id="confirmUpiBtn" class="btn btn-primary btn-block">
+                                    Confirm UPI Payment
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Cash Payment -->
+                        <div class="payment-method-card" data-method="cash">
+                            <div class="method-header">
+                                <span class="method-icon">💵</span>
+                                <h3>Cash Payment</h3>
+                            </div>
+                            <div class="method-content">
+                                <div class="form-group">
+                                    <label for="cashAmount">Amount Tendered:</label>
+                                    <input type="number" id="cashAmount" class="form-input" placeholder="Enter amount"
+                                        min="0" step="10">
+                                </div>
+                                <div class="change-display">
+                                    <span>Change:</span>
+                                    <span id="changeAmount" class="change-amount">₹0.00</span>
+                                </div>
+                                <button id="confirmCashBtn" class="btn btn-primary btn-block">
+                                    Confirm Cash Payment
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Print and Reset -->
+                    <div class="payment-actions">
+                        <button id="printReceiptBtn" class="btn btn-outline">
+                            📄 Print Receipt
+                        </button>
+                        <button id="backToBillingBtn" class="btn btn-secondary">
+                            ← Back to Billing
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- History & Analytics Section -->
+            <section id="historyView" class="view-section">
+                <div class="history-container">
+                    <!-- Filters -->
+                    <div class="history-filters">
+                        <div class="filter-group">
+                            <label for="dateRange">Date Range:</label>
+                            <input type="date" id="startDate" class="form-input">
+                            <span>to</span>
+                            <input type="date" id="endDate" class="form-input">
+                        </div>
+                        <div class="filter-group">
+                            <label for="paymentMethodFilter">Payment Method:</label>
+                            <select id="paymentMethodFilter" class="form-select">
+                                <option value="all">All Methods</option>
+                                <option value="upi">UPI</option>
+                                <option value="cash">Cash</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <input type="text" id="searchBills" class="form-input" placeholder="Search by Bill ID...">
+                        </div>
+                        <button id="applyFiltersBtn" class="btn btn-primary">Apply Filters</button>
+                        <button id="resetFiltersBtn" class="btn btn-outline">Reset</button>
+                    </div>
+
+                    <!-- Dashboard -->
+                    <div class="dashboard">
+                        <div class="dashboard-card">
+                            <h3>Today's Sales</h3>
+                            <p class="dashboard-value" id="todaySales">₹0.00</p>
+                            <p class="dashboard-subtext" id="todayBills">0 bills</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>This Month</h3>
+                            <p class="dashboard-value" id="monthSales">₹0.00</p>
+                            <p class="dashboard-subtext" id="monthBills">0 bills</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>Average Bill</h3>
+                            <p class="dashboard-value" id="avgBill">₹0.00</p>
+                            <p class="dashboard-subtext">All time</p>
+                        </div>
+                        <div class="dashboard-card">
+                            <h3>Most Sold Item</h3>
+                            <p class="dashboard-value" id="topItem">-</p>
+                            <p class="dashboard-subtext" id="topItemQty">0 sold</p>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="charts-container">
+                        <div class="chart-card">
+                            <h3>Daily Sales Trend</h3>
+                            <div class="bar-chart" id="salesChart">
+                                <!-- CSS Bar Chart -->
+                                <div class="bar-chart-bars">
+                                    <!-- Bars will be dynamically generated -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Payment Methods</h3>
+                            <div class="pie-chart" id="paymentChart">
+                                <!-- CSS Pie Chart -->
+                                <div class="pie-chart-slice upi" style="--percentage: 50%;"></div>
+                                <div class="pie-chart-slice cash" style="--percentage: 50%;"></div>
+                                <div class="pie-chart-center"></div>
+                            </div>
+                            <div class="chart-legend">
+                                <div class="legend-item upi">UPI</div>
+                                <div class="legend-item cash">Cash</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bill History -->
+                    <div class="bill-history">
+                        <h3>Bill History</h3>
+                        <div class="history-list" id="historyList">
+                            <!-- History items will be dynamically loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settingsView" class="view-section">
+                <div class="settings-container">
+                    <!-- Shop Settings -->
+                    <div class="settings-card">
+                        <h3 class="settings-title">Shop Settings</h3>
+                        <div class="form-group">
+                            <label for="settingsShopName">Shop Name:</label>
+                            <input type="text" id="settingsShopName" class="form-input" placeholder="Enter shop name">
+                        </div>
+                        <div class="form-group">
+                            <label for="settingsShopAddress">Shop Address:</label>
+                            <textarea id="settingsShopAddress" class="form-textarea" rows="3"
+                                placeholder="Enter shop address"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="settingsTax">Tax Percentage (%):</label>
+                            <input type="number" id="settingsTax" class="form-input" min="0" max="50" step="0.1"
+                                value="5">
+                        </div>
+                        <div class="form-group">
+                            <label for="settingsDefaultUpi">Default UPI ID:</label>
+                            <input type="text" id="settingsDefaultUpi" class="form-input" placeholder="shop@upi">
+                        </div>
+                        <button id="saveShopSettings" class="btn btn-primary">Save Shop Settings</button>
+                    </div>
+
+                    <!-- Menu Management -->
+                    <div class="settings-card">
+                        <h3 class="settings-title">Menu Management</h3>
+                        <div class="menu-items-list" id="menuItemsList">
+                            <!-- Menu items will be dynamically loaded here -->
+                        </div>
+                        <div class="add-item-form">
+                            <h4>Add New Item</h4>
+                            <div class="form-group">
+                                <label for="newItemEnglish">English Name:</label>
+                                <input type="text" id="newItemEnglish" class="form-input"
+                                    placeholder="Item name in English">
+                            </div>
+                            <div class="form-group">
+                                <label for="newItemTamil">Tamil Name:</label>
+                                <input type="text" id="newItemTamil" class="form-input" placeholder="தமிழ் பெயர்">
+                            </div>
+                            <div class="form-group">
+                                <label for="newItemPrice">Price (₹):</label>
+                                <input type="number" id="newItemPrice" class="form-input" min="1" step="5"
+                                    placeholder="Enter price">
+                            </div>
+                            <div class="form-group">
+                                <label for="newItemImage">Image URL (Optional):</label>
+                                <input type="text" id="newItemImage" class="form-input"
+                                    placeholder="https://unsplash.com/photo.jpg">
+                                <small class="form-help">Leave empty for default image</small>
+                            </div>
+                            <button id="addNewItemBtn" class="btn btn-primary">Add Item</button>
+                        </div>
+                    </div>
+
+                    <!-- Data Management -->
+                    <div class="settings-card">
+                        <h3 class="settings-title">Data Management</h3>
+                        <div class="data-actions">
+                            <button id="exportJsonBtn" class="btn btn-outline">Export JSON</button>
+                            <button id="exportCsvBtn" class="btn btn-outline">Export CSV (This Month)</button>
+                            <button id="importDataBtn" class="btn btn-outline">Import Data</button>
+                        </div>
+
+                        <div class="danger-zone">
+                            <h4>Danger Zone</h4>
+                            <div class="danger-actions">
+                                <button id="resetTodayBtn" class="btn btn-danger">
+                                    Reset Today's Data
+                                </button>
+                                <button id="resetAllBtn" class="btn btn-danger">
+                                    Reset All Data
+                                </button>
+                            </div>
+                            <p class="danger-warning">⚠️ These actions cannot be undone!</p>
+                        </div>
+                    </div>
+
+                    <!-- App Info -->
+                    <div class="settings-card">
+                        <h3 class="settings-title">App Information</h3>
+                        <div class="app-info">
+                            <p><strong>Version:</strong> 1.0.0</p>
+                            <p><strong>Storage Used:</strong> <span id="storageUsed">0 KB</span></p>
+                            <p><strong>Total Bills:</strong> <span id="totalBillsCount">0</span></p>
+                            <p><strong>Last Backup:</strong> <span id="lastBackup">Never</span></p>
+                        </div>
+                        <div class="app-actions">
+                            <button id="checkUpdatesBtn" class="btn btn-outline">
+                                Check for Updates
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Toast Notifications -->
+        <div id="toastContainer" class="toast-container"></div>
+
+        <!-- Modal Container -->
+        <div id="modalContainer" class="modal-container">
+            <!-- Modals will be dynamically inserted here -->
+        </div>
+
+        <!-- Print Styles (Hidden until printing) -->
+        <div id="printContent" class="print-content"></div>
+    </div>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js')
+                    .then(function (registration) {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(function (err) {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+    </script>
+
+    <!-- Main Application Script -->
+    <script src="script.js" defer></script>
+</body>
+
+</html>

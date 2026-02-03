@@ -1,0 +1,60 @@
+{
+    "name": "Tiffin Shop Billing",
+    "short_name": "Tiffin Bill",
+    "description": "Offline billing application for roadside tiffin shops in India",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "display_override": ["window-controls-overlay"],
+    "background_color": "#0d6efd",
+    "theme_color": "#0d6efd",
+    "orientation": "portrait-primary",
+    "scope": "./",
+    "lang": "en-IN",
+    "dir": "ltr",
+    "categories": ["business", "food"],
+    "icons": [
+        {
+            "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%230d6efd%22>🥘</text></svg>",
+            "sizes": "192x192",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%23ffffff%22>🥘</text></svg>",
+            "sizes": "512x512",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22360%22 height=%22640%22><rect width=%22360%22 height=%22640%22 fill=%22%230d6efd%22/><text x=%22180%22 y=%22320%22 font-size=%2230%22 text-anchor=%22middle%22 fill=%22%23ffffff%22>Tiffin Shop Billing App</text></svg>",
+            "sizes": "360x640",
+            "type": "image/svg+xml",
+            "form_factor": "narrow",
+            "label": "Mobile billing interface"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "New Bill",
+            "short_name": "New",
+            "description": "Create a new bill",
+            "url": "./index.html?view=billing",
+            "icons": [{
+                "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%230d6efd%22>💵</text></svg>",
+                "sizes": "96x96"
+            }]
+        },
+        {
+            "name": "Sales History",
+            "short_name": "History",
+            "description": "View sales history and analytics",
+            "url": "./index.html?view=history",
+            "icons": [{
+                "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%230d6efd%22>📊</text></svg>",
+                "sizes": "96x96"
+            }]
+        }
+    ]
+}
